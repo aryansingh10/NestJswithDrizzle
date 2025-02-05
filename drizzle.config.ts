@@ -1,13 +1,13 @@
 import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
-  dialect: 'mysql', // Use "mysql2" as the dialect for MySQL
-  schema: './src/database/schema.ts', // Path to your schema file
-  out: './drizzle/migrations', // Output directory for migration files
+  dialect: 'mysql',
+  schema: './src/database/schema.ts',
+  out: './drizzle/migrations',
   dbCredentials: {
     host: 'localhost',
-    user: 'aryansinghthakur', // Update with your MySQL username
-    password: '1234', // Update with your MySQL password
-    database: 'test', // Update with your database name
+    user: 'aryansinghthakur',
+    password: '1234',
+    database: 'test',
   },
 });

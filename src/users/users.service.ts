@@ -8,30 +8,65 @@ import { users, NewUser, User } from '../database/schema';
 export class UsersService {
   constructor(
     @Inject('DRIZZLE_PROVIDER')
-    private drizzle: MySql2Database<typeof schema>,
+    private db: MySql2Database<typeof schema>,
   ) {}
 
   async create(data: NewUser): Promise<User> {
-    const [result] = await this.drizzle.insert(users).values({
+    const createdAt = new Date();
+    const [result] = await this.db.insert(users).values({
       ...data,
-      createdAt: new Date(),
+      createdAt,
+      isDeleted: false,
     });
     return {
       id: Number(result.insertId),
       ...data,
-      createdAt: new Date(),
+      createdAt,
+      isDeleted: false,
     };
   }
 
   async findAll(): Promise<User[]> {
-    return this.drizzle.select().from(users);
+    return this.db.select().from(users);
   }
 
-  async findOne(id: number): Promise<User> {
-    const [user] = await this.drizzle
-      .select()
-      .from(users)
+  async findOne(id: number): Promise<User | null> {
+    const [user] = await this.db.select().from(users).where(eq(users.id, id));
+    return user ?? null;
+  }
+
+  async deleteOne(id: number): Promise<string> {
+    const userToDelete = await this.findOne(id);
+    if (!userToDelete) {
+      return 'User not found';
+    }
+    await this.db.delete(users).where(eq(users.id, id));
+    return `User with this ${id} is Deleted`;
+  }
+
+  async updateOne(id: number, updateData: Partial<NewUser>): Promise<string> {
+    const userToUpdate = await this.findOne(id);
+    if (!userToUpdate) {
+      return 'User not found';
+    }
+
+    await this.db.update(users).set(updateData).where(eq(users.id, id));
+    return `User with ID ${id} has been updated`;
+  }
+
+  async softDelete(id: number): Promise<string> {
+    const userToDelete = await this.findOne(id);
+    if (!userToDelete) {
+      return 'User not found';
+    }
+    if (userToDelete.isDeleted === true) {
+      return `User Not exist`;
+    }
+
+    await this.db
+      .update(users)
+      .set({ isDeleted: true })
       .where(eq(users.id, id));
-    return user;
+    return 'User Soft deleted Successfully';
   }
 }
